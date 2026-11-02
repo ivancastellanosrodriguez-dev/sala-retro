@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1a1315">
+<title>Control Sala Retro</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&display=swap">
+<style>
+/* Layout: mando horizontal. Cruceta a la izquierda, botones de acción a la derecha, Select/Start al centro. */
+:root {
+  --bg: #1a1315;
+  --body: #271d20;
+  --key: #3a2c30;
+  --key-on: #e6b450;
+  --fg: #f1e8d6;
+  --muted: #b8a993;
+  --a: #b3323f;
+  --ok: #6fc28b;
+  --display: "Chakra Petch", "Arial Narrow", system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--display);
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.pad {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 8px 12px;
+  padding: max(10px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(10px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.shoulders { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.shoulder { width: 28%; height: 48px; border-radius: 12px; }
+.state { font-size: 0.85rem; color: var(--muted); display: flex; align-items: center; gap: 8px; text-align: center; }
+.state i { width: 9px; height: 9px; border-radius: 50%; background: var(--a); flex: none; }
+.state.on i { background: var(--ok); }
+.dpad {
+  align-self: center;
+  justify-self: center;
+  display: grid;
+  grid-template: repeat(3, min(17vh, 13vw, 96px)) / repeat(3, min(17vh, 13vw, 96px));
+}
+.dpad .k { border-radius: 10px; }
+.dpad .c { background: var(--key); }
+.mid { align-self: end; display: flex; gap: 14px; padding-bottom: 6vh; }
+.mid .k { width: 76px; height: 34px; border-radius: 17px; font-size: 0.75rem; }
+.face {
+  align-self: center;
+  justify-self: center;
+  position: relative;
+  width: min(52vh, 38vw, 270px);
+  aspect-ratio: 1;
+  max-width: 100%;
+}
+.face .k { position: absolute; width: 38%; height: 38%; border-radius: 50%; font-size: 1.4rem; }
+.face [data-b="X"] { top: 0; left: 31%; }
+.face [data-b="Y"] { top: 31%; left: 0; }
+.face [data-b="A"] { top: 31%; right: 0; background: var(--a); }
+.face [data-b="B"] { bottom: 0; left: 31%; background: var(--a); }
+.k {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--key);
+  color: var(--fg);
+  border: 0;
+  font: 700 1rem/1 var(--display);
+  box-shadow: 0 4px 0 #0e0a0b;
+}
+.k.on { background: var(--key-on) !important; color: #24180b; transform: translateY(3px); box-shadow: 0 1px 0 #0e0a0b; }
+.rotate {
+  position: fixed; inset: 0;
+  display: none;
+  place-content: center;
+  text-align: center;
+  padding: 24px;
+  background: var(--bg);
+  font-size: 1.3rem;
+  gap: 8px;
+}
+.rotate small { color: var(--muted); font-size: 0.95rem; }
+@media (orientation: portrait) { .rotate { display: grid; } }
+</style>
+</head>
+<body>
+<div class="pad">
+  <div class="shoulders">
+    <div class="k shoulder" data-b="L">L</div>
+    <div class="state" id="state"><i></i><span>Conectando…</span></div>
+    <div class="k shoulder" data-b="R">R</div>
+  </div>
+  <div class="dpad">
+    <span></span><div class="k" data-b="UP">▲</div><span></span>
+    <div class="k" data-b="LEFT">◀</div><div class="c"></div><div class="k" data-b="RIGHT">▶</div>
+    <span></span><div class="k" data-b="DOWN">▼</div><span></span>
+  </div>
+  <div class="mid">
+    <div class="k" data-b="SELECT">SELECT</div>
+    <div class="k" data-b="START">START</div>
+  </div>
+  <div class="face">
+    <div class="k" data-b="X">X</div>
+    <div class="k" data-b="Y">Y</div>
+    <div class="k" data-b="A">A</div>
+    <div class="k" data-b="B">B</div>
+  </div>
+</div>
+<div class="rotate"><span>Gira el celular en horizontal</span><small>El control funciona mejor así.</small></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+<script>
+const hostId = location.hash.slice(1);
+const stateEl = document.getElementById("state");
+function setState(on, msg) {
+  stateEl.classList.toggle("on", on);
+  stateEl.lastElementChild.textContent = msg;
+}
+let conn = null;
+let peer = null;
+
+function connect() {
+  if (!hostId) { setState(false, "Falta el código. Escanea el QR de la TV."); return; }
+  if (!peer || peer.destroyed) {
+    peer = new Peer();
+    peer.on("open", connect);
+    peer.on("error", () => { setState(false, "Sin conexión, reintentando…"); setTimeout(connect, 2000); });
+    return;
+  }
+  if (!peer.open) return;
+  setState(false, "Conectando…");
+  conn = peer.connect(hostId, { reliable: true });
+  conn.on("open", () => setState(true, "Conectado a la TV"));
+  conn.on("close", () => { setState(false, "Desconectado, reintentando…"); conn = null; setTimeout(connect, 1500); });
+}
+connect();
+// Si la página de la TV se recarga (al volver a la biblioteca), reconectar
+setInterval(() => { if (peer && peer.open && !conn) connect(); }, 4000);
+
+function send(b, d) {
+  if (conn && conn.open) conn.send({ b, d });
+}
+
+// Multitáctil: cada dedo puede deslizarse entre botones (útil en la cruceta)
+const keys = [...document.querySelectorAll(".k")];
+const touchKey = new Map();
+const held = new Map();
+function setHeld(el, on) {
+  const b = el.dataset.b;
+  const n = (held.get(b) || 0) + (on ? 1 : -1);
+  held.set(b, Math.max(0, n));
+  if (on && n === 1) { el.classList.add("on"); send(b, true); if (navigator.vibrate) navigator.vibrate(12); }
+  if (!on && n <= 0) { el.classList.remove("on"); send(b, false); }
+}
+function keyAt(x, y) {
+  const el = document.elementFromPoint(x, y);
+  return el && el.closest && el.closest(".k[data-b]");
+}
+function onTouch(e) {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    const before = touchKey.get(t.identifier) || null;
+    const after = e.type === "touchend" || e.type === "touchcancel" ? null : keyAt(t.clientX, t.clientY);
+    if (before !== after) {
+      if (before) setHeld(before, false);
+      if (after) setHeld(after, true);
+    }
+    if (after) touchKey.set(t.identifier, after); else touchKey.delete(t.identifier);
+  }
+}
+for (const ev of ["touchstart", "touchmove", "touchend", "touchcancel"]) {
+  document.addEventListener(ev, onTouch, { passive: false });
+}
+// Ratón, para probar desde una computadora
+for (const k of keys) {
+  k.addEventListener("mousedown", () => { setHeld(k, true); const up = () => { setHeld(k, false); removeEventListener("mouseup", up); }; addEventListener("mouseup", up); });
+}
+// Mantener la pantalla encendida
+async function wake() { try { await navigator.wakeLock.request("screen"); } catch (e) {} }
+wake();
+document.addEventListener("visibilitychange", () => { if (!document.hidden) wake(); });
+</script>
+</body>
+</html>

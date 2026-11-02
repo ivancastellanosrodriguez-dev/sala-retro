@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sala Retro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: sala de TV. Una sola columna centrada, tarjetas grandes navegables con control, reproductor a pantalla completa. */
+:root {
+  --bg: #1a1315;
+  --surface: #271d20;
+  --surface-hi: #33262a;
+  --line: #4a383d;
+  --fg: #f1e8d6;
+  --muted: #b8a993;
+  --gold: #e6b450;
+  --maroon: #b3323f;
+  --ok: #6fc28b;
+  --display: "Chakra Petch", "Arial Narrow", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 1.0625rem/1.5 var(--body);
+}
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 32px;
+}
+header.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px 24px;
+  border-bottom: 2px solid var(--line);
+  padding-bottom: 20px;
+}
+.brand { display: grid; gap: 4px; }
+.brand h1 {
+  margin: 0;
+  font: 700 clamp(2.2rem, 5vw, 3.4rem)/1 var(--display);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.brand h1 span { color: var(--gold); }
+.brand p { margin: 0; color: var(--muted); }
+.status { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  color: var(--muted);
+  background: var(--surface);
+}
+.chip i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.chip.on { color: var(--fg); border-color: var(--ok); }
+.chip.on i { background: var(--ok); }
+
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+button, .btn {
+  font: 700 1rem/1 var(--body);
+  color: var(--fg);
+  background: var(--surface-hi);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 20px;
+  cursor: pointer;
+}
+button.primary { background: var(--gold); color: #24180b; border-color: var(--gold); }
+button:hover { border-color: var(--gold); }
+button:focus-visible, .card:focus-visible {
+  outline: 4px solid var(--gold);
+  outline-offset: 3px;
+}
+
+h2 {
+  margin: 0 0 14px;
+  font: 700 1.05rem/1.2 var(--display);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+.card {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 10px;
+  min-height: 170px;
+  padding: 18px;
+  text-align: left;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  cursor: pointer;
+  min-width: 0;
+}
+.card:hover { border-color: var(--gold); }
+.card:focus-visible { transform: scale(1.03); transition: transform 0.12s; }
+.card .sys {
+  justify-self: start;
+  font: 700 0.78rem/1 var(--display);
+  letter-spacing: 0.1em;
+  padding: 5px 9px;
+  border-radius: 6px;
+  color: #fff;
+  background: var(--maroon);
+}
+.card .name {
+  font: 700 1.25rem/1.2 var(--display);
+  overflow-wrap: anywhere;
+}
+.card .meta { color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.card .del {
+  position: absolute;
+  top: 10px; right: 10px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+.card .del:hover { color: var(--fg); border-color: var(--line); }
+.card select {
+  font: inherit; font-size: 0.9rem;
+  background: var(--bg); color: var(--fg);
+  border: 1px solid var(--line); border-radius: 8px; padding: 6px;
+}
+.empty {
+  border: 2px dashed var(--line);
+  border-radius: 14px;
+  padding: 28px;
+  display: grid;
+  gap: 10px;
+  color: var(--muted);
+}
+.empty strong { color: var(--fg); font-size: 1.15rem; }
+.drop-on .empty, .drop-on .grid { border-color: var(--gold); }
+
+.help {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+.help section {
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 20px;
+  min-width: 0;
+}
+.help h3 { margin: 0 0 8px; font: 700 1.1rem/1.2 var(--display); color: var(--gold); }
+.help p, .help li { margin: 0; color: var(--muted); max-width: 60ch; }
+.help ul { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
+kbd {
+  font: 700 0.85em/1 var(--body);
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  border-bottom-width: 3px;
+  border-radius: 5px;
+  color: var(--fg);
+}
+
+/* Celular como control */
+.phone {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 20px;
+  align-items: center;
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 20px;
+}
+.phone #qr { background: #fff; padding: 10px; border-radius: 10px; line-height: 0; }
+.phone #qr img, .phone #qr canvas { width: 180px; height: 180px; }
+.phone .code { font: 700 1.6rem/1.1 var(--display); letter-spacing: 0.08em; color: var(--gold); overflow-wrap: anywhere; }
+.phone p { margin: 0; color: var(--muted); }
+.phone .txt { display: grid; gap: 8px; min-width: 0; }
+@media (max-width: 560px) { .phone { grid-template-columns: 1fr; } }
+
+/* Reproductor */
+#player {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 50;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+#player .bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 8px max(12px, env(safe-area-inset-right, 0px)) 8px max(12px, env(safe-area-inset-left, 0px));
+  padding-top: max(8px, env(safe-area-inset-top, 0px));
+  background: var(--bg);
+}
+#player .bar button { padding: 10px 14px; font-size: 0.9rem; }
+#player .bar .title { font: 700 1rem/1.2 var(--display); margin-right: auto; overflow-wrap: anywhere; min-width: 0; }
+#player .bar .hint { color: var(--muted); font-size: 0.85rem; }
+#game { width: 100%; height: 100%; min-height: 0; }
+#player.hide-bar { grid-template-rows: 0 1fr; }
+#player.hide-bar .bar { display: none; }
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  background: var(--surface-hi);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 18px;
+  z-index: 80;
+  max-width: calc(100% - 32px);
+}
+@media (prefers-reduced-motion: reduce) { .card:focus-visible { transform: none; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="home">
+  <header class="top">
+    <div class="brand">
+      <h1>Sala <span>Retro</span></h1>
+      <p>Tus juegos de NES, SNES, Game Boy, GBA, Sega, N64 y PlayStation en la TV.</p>
+    </div>
+    <div class="status">
+      <span class="chip" id="padChip"><i></i><span>Sin control conectado</span></span>
+      <span class="chip" id="phoneChip"><i></i><span>Celular sin conectar</span></span>
+    </div>
+  </header>
+
+  <div class="actions">
+    <button class="primary" id="addBtn">Agregar juegos</button>
+    <button id="phoneBtn">Usar el celular como control</button>
+    <button id="fsBtn">Pantalla completa</button>
+    <input type="file" id="fileInput" multiple hidden
+      accept=".nes,.fds,.unf,.sfc,.smc,.fig,.swc,.gb,.gbc,.gba,.md,.gen,.smd,.sms,.gg,.n64,.z64,.v64,.chd,.pbp,.iso,.cue,.zip,.7z,.bin">
+  </div>
+
+  <div class="phone" id="phonePanel" hidden>
+    <div id="qr"></div>
+    <div class="txt">
+      <h3 style="margin:0;font:700 1.2rem/1.2 var(--display)">Escanea con la cámara del celular</h3>
+      <p>Se abre un control en el celular. Ponlo en horizontal. Si no puedes escanear, abre esta dirección en el celular:</p>
+      <div class="code" id="phoneUrl"></div>
+      <p id="phoneMsg">Esperando al celular…</p>
+    </div>
+  </div>
+
+  <div id="library">
+    <h2>Tu biblioteca</h2>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="help">
+    <section>
+      <h3>Llevarlo a la TV</h3>
+      <ul>
+        <li>Laptop a la TV con cable HDMI: es lo más fluido.</li>
+        <li>Fire TV o Android TV: abre esta página en el navegador Silk o TV Bro.</li>
+        <li>Chromecast: en Chrome, menú ⋮ › Transmitir › Transmitir pestaña. Tiene algo de retraso.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Controles</h3>
+      <ul>
+        <li>Control Bluetooth o USB (Xbox, PlayStation, 8BitDo): conéctalo y presiona un botón.</li>
+        <li>En la biblioteca: flechas o cruceta para moverte, <kbd>A</kbd> o <kbd>Enter</kbd> para jugar.</li>
+        <li>Durante el juego: mantén <kbd>Select</kbd> + <kbd>Start</kbd> dos segundos para volver.</li>
+        <li>Teclado: flechas, <kbd>Z</kbd> = A, <kbd>X</kbd> = B, <kbd>Enter</kbd> = Start.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Tus juegos</h3>
+      <p>Agrega los archivos de juegos que tengas (.nes, .sfc, .gba, .z64, .chd…). Se guardan en este navegador, así que no tienes que volver a subirlos. Para tu partida, usa Guardar en el menú del emulador.</p>
+    </section>
+  </div>
+</div>
+
+<div id="player" hidden>
+  <div class="bar">
+    <button id="backBtn">‹ Biblioteca</button>
+    <span class="title" id="playTitle"></span>
+    <span class="hint">Select + Start (2 s) para volver</span>
+    <button id="fsPlayBtn">Pantalla completa</button>
+  </div>
+  <div id="game"></div>
+</div>
+<div id="toast" hidden></div>
+
+<script>
+const SYSTEMS = {
+  nes:   { label: "NES",       core: "nes",              color: "#b3323f", ext: ["nes", "fds", "unf"] },
+  snes:  { label: "SNES",      core: "snes",             color: "#6b4fa8", ext: ["sfc", "smc", "fig", "swc"] },
+  gb:    { label: "GAME BOY",  core: "gb",               color: "#5d7a3a", ext: ["gb", "gbc"] },
+  gba:   { label: "GBA",       core: "gba",              color: "#3d55a8", ext: ["gba"] },
+  md:    { label: "GENESIS",   core: "segaMD",           color: "#2b2b2b", ext: ["md", "gen", "smd"] },
+  sms:   { label: "MASTER SYSTEM", core: "genesis_plus_gx", color: "#a8452b", ext: ["sms"] },
+  gg:    { label: "GAME GEAR", core: "segaGG",           color: "#2f6f83", ext: ["gg"] },
+  n64:   { label: "N64",       core: "n64",              color: "#2e7d4f", ext: ["n64", "z64", "v64"] },
+  psx:   { label: "PLAYSTATION", core: "psx",            color: "#55606e", ext: ["chd", "pbp", "iso", "cue"] }
+};
+// Botones del RetroPad que usa el emulador
+const PAD = { B: 0, Y: 1, SELECT: 2, START: 3, UP: 4, DOWN: 5, LEFT: 6, RIGHT: 7, A: 8, X: 9, L: 10, R: 11 };
+
+const $ = (s) => document.querySelector(s);
+const toastEl = $("#toast");
+let toastTimer;
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toastEl.hidden = true; }, 3500);
+}
+
+/* ---------- Biblioteca en IndexedDB ---------- */
+let dbp;
+function db() {
+  if (!dbp) dbp = new Promise((res, rej) => {
+    const r = indexedDB.open("sala-retro", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("games", { keyPath: "id" });
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  return dbp;
+}
+async function tx(mode, fn) {
+  const d = await db();
+  return new Promise((res, rej) => {
+    const t = d.transaction("games", mode);
+    const out = fn(t.objectStore("games"));
+    t.oncomplete = () => res(out && out.result);
+    t.onerror = () => rej(t.error);
+  });
+}
+const listGames = () => tx("readonly", (s) => s.getAll()).catch(() => []);
+const getGame = (id) => tx("readonly", (s) => s.get(id));
+const putGame = (g) => tx("readwrite", (s) => s.put(g));
+const delGame = (id) => tx("readwrite", (s) => s.delete(id));
+
+function detectSystem(name) {
+  const ext = name.split(".").pop().toLowerCase();
+  for (const k in SYSTEMS) if (SYSTEMS[k].ext.includes(ext)) return k;
+  return null; // .zip, .7z, .bin: el usuario elige
+}
+function prettyName(file) {
+  return file.replace(/\.[^.]+$/, "").replace(/[_]+/g, " ").replace(/\s*[\(\[].*?[\)\]]/g, "").trim() || file;
+}
+function fmtSize(b) {
+  return b > 1048576 ? (b / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB";
+}
+
+async function addFiles(files) {
+  let n = 0;
+  for (const f of files) {
+    const g = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      file: f.name,
+      name: prettyName(f.name),
+      system: detectSystem(f.name),
+      size: f.size,
+      added: Date.now(),
+      blob: f
+    };
+    try { await putGame(g); n++; } catch (e) { toast("No se pudo guardar " + f.name + ". Puede que el navegador no tenga espacio."); }
+  }
+  if (n) toast(n === 1 ? "Juego agregado" : n + " juegos agregados");
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+  render();
+}
+
+const DEMO = { id: "demo", name: "Prueba de control", system: "nes", file: "prueba-control.nes", size: 24592, demo: true };
+
+async function render() {
+  const games = (await listGames()).sort((a, b) => b.added - a.added);
+  const grid = $("#grid");
+  grid.innerHTML = "";
+  const all = games.concat([DEMO]);
+  for (const g of all) {
+    const sys = g.system ? SYSTEMS[g.system] : null;
+    const card = document.createElement("div");
+    card.className = "card";
+    card.tabIndex = 0;
+    card.dataset.id = g.id;
+    card.setAttribute("role", "button");
+    const badge = document.createElement("span");
+    badge.className = "sys";
+    badge.textContent = sys ? sys.label : "¿CONSOLA?";
+    if (sys) badge.style.background = sys.color;
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = g.name;
+    const meta = document.createElement("span");
+    meta.className = "meta";
+    meta.textContent = g.demo ? "Demo incluida: la pantalla cambia de color al presionar A" : g.file + " · " + fmtSize(g.size);
+    card.append(badge, name);
+    if (!sys) {
+      const sel = document.createElement("select");
+      sel.id = "sys-" + g.id;
+      sel.innerHTML = '<option value="">Elige la consola…</option>' +
+        Object.entries(SYSTEMS).map(([k, s]) => `<option value="${k}">${s.label}</option>`).join("");
+      sel.addEventListener("click", (e) => e.stopPropagation());
+      sel.addEventListener("change", async () => {
+        if (!sel.value) return;
+        const full = await getGame(g.id);
+        full.system = sel.value;
+        await putGame(full);
+        render();
+      });
+      card.append(sel);
+    }
+    card.append(meta);
+    if (!g.demo) {
+      const del = document.createElement("button");
+      del.className = "del";
+      del.textContent = "Quitar";
+      del.tabIndex = -1;
+      del.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (del.dataset.armed) { await delGame(g.id); render(); return; }
+        del.dataset.armed = "1";
+        del.textContent = "¿Quitar? Toca otra vez";
+        setTimeout(() => { delete del.dataset.armed; del.textContent = "Quitar"; }, 3000);
+      });
+      card.append(del);
+    }
+    const go = () => {
+      if (!g.system) { toast("Primero elige de qué consola es este juego."); return; }
+      play(g.id);
+    };
+    card.addEventListener("click", go);
+    card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    grid.append(card);
+  }
+  if (!games.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.innerHTML = "<strong>Todavía no hay juegos tuyos aquí</strong>" +
+      "<span>Toca «Agregar juegos» o arrastra los archivos a esta página. Mientras, prueba tu control con la demo.</span>";
+    grid.prepend(empty);
+    empty.style.gridColumn = "1 / -1";
+  }
+}
+
+/* ---------- Agregar archivos ---------- */
+$("#addBtn").addEventListener("click", () => $("#fileInput").click());
+$("#fileInput").addEventListener("change", (e) => { addFiles([...e.target.files]); e.target.value = ""; });
+document.addEventListener("dragover", (e) => { e.preventDefault(); document.body.classList.add("drop-on"); });
+document.addEventListener("dragleave", (e) => { if (!e.relatedTarget) document.body.classList.remove("drop-on"); });
+document.addEventListener("drop", (e) => {
+  e.preventDefault();
+  document.body.classList.remove("drop-on");
+  if (e.dataTransfer.files.length) addFiles([...e.dataTransfer.files]);
+});
+
+/* ---------- Pantalla completa ---------- */
+function fullscreen() {
+  const el = document.documentElement;
+  const req = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (req) Promise.resolve(req.call(el)).catch(() => toast("Este navegador no permite pantalla completa."));
+}
+$("#fsBtn").addEventListener("click", fullscreen);
+$("#fsPlayBtn").addEventListener("click", fullscreen);
+
+/* ---------- Jugar ---------- */
+let playing = false;
+async function play(id) {
+  let g, blob;
+  if (id === "demo") {
+    g = DEMO;
+    blob = await fetch("demo/prueba-control.nes").then((r) => r.blob());
+  } else {
+    g = await getGame(id);
+    blob = g.blob;
+  }
+  playing = true;
+  $("#home").hidden = true;
+  $("#player").hidden = false;
+  $("#playTitle").textContent = g.name;
+  window.EJS_player = "#game";
+  window.EJS_core = SYSTEMS[g.system].core;
+  window.EJS_gameName = g.name;
+  window.EJS_gameUrl = new File([blob], g.file);
+  window.EJS_pathtodata = "data/";
+  window.EJS_language = "es-ES";
+  window.EJS_startOnLoaded = true;
+  window.EJS_color = "#e6b450";
+  window.EJS_backgroundColor = "#000";
+  window.EJS_disableAutoLang = true;
+  const s = document.createElement("script");
+  s.src = "data/loader.js";
+  document.body.append(s);
+}
+function backToLibrary() {
+  // EmulatorJS no se puede reiniciar en la misma página; recargar es lo más limpio.
+  location.reload();
+}
+$("#backBtn").addEventListener("click", backToLibrary);
+
+/* ---------- Control físico (Gamepad API) ---------- */
+const padChip = $("#padChip");
+function updatePadChip() {
+  const pads = [...(navigator.getGamepads ? navigator.getGamepads() : [])].filter(Boolean);
+  padChip.classList.toggle("on", pads.length > 0);
+  padChip.lastElementChild.textContent = pads.length
+    ? "Control: " + pads[0].id.replace(/\(.*?\)/g, "").trim().slice(0, 32)
+    : "Sin control conectado";
+}
+window.addEventListener("gamepadconnected", (e) => { updatePadChip(); toast("Control conectado"); });
+window.addEventListener("gamepaddisconnected", updatePadChip);
+
+function moveFocus(dir) {
+  const cards = [...document.querySelectorAll(".card")];
+  if (!cards.length) return;
+  let i = cards.indexOf(document.activeElement);
+  if (i < 0) { cards[0].focus(); return; }
+  const cols = Math.max(1, Math.round($("#grid").clientWidth / cards[0].getBoundingClientRect().width));
+  const step = { left: -1, right: 1, up: -cols, down: cols }[dir];
+  const j = Math.min(cards.length - 1, Math.max(0, i + step));
+  cards[j].focus();
+  cards[j].scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+document.addEventListener("keydown", (e) => {
+  if (playing) return;
+  const map = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down" };
+  if (map[e.key] && (document.activeElement.classList.contains("card") || document.activeElement === document.body)) {
+    e.preventDefault();
+    moveFocus(map[e.key]);
+  }
+});
+
+// Sondeo del control: navegar la biblioteca y salir del juego con Select + Start
+let prev = {};
+let comboStart = 0;
+function poll() {
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  for (const p of pads) {
+    if (!p) continue;
+    const b = (i) => p.buttons[i] && p.buttons[i].pressed;
+    const ax = p.axes || [];
+    const now = {
+      up: b(12) || ax[1] < -0.6, down: b(13) || ax[1] > 0.6,
+      left: b(14) || ax[0] < -0.6, right: b(15) || ax[0] > 0.6,
+      a: b(0), select: b(8), start: b(9)
+    };
+    const was = prev[p.index] || {};
+    if (!playing) {
+      for (const d of ["up", "down", "left", "right"]) if (now[d] && !was[d]) moveFocus(d);
+      if (now.a && !was.a && document.activeElement.classList.contains("card")) document.activeElement.click();
+    } else {
+      if (now.select && now.start) {
+        if (!comboStart) comboStart = performance.now();
+        else if (performance.now() - comboStart > 2000) backToLibrary();
+      } else comboStart = 0;
+    }
+    prev[p.index] = now;
+  }
+  requestAnimationFrame(poll);
+}
+requestAnimationFrame(poll);
+
+/* ---------- Celular como control (PeerJS / WebRTC) ---------- */
+const phoneChip = $("#phoneChip");
+let peer, phoneHeld = {};
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = src; s.onload = res; s.onerror = rej;
+    document.head.append(s);
+  });
+}
+function phoneButton(name, down) {
+  phoneHeld[name] = down;
+  if (playing) {
+    const gm = window.EJS_emulator && window.EJS_emulator.gameManager;
+    if (gm && PAD[name] !== undefined) gm.simulateInput(0, PAD[name], down ? 1 : 0);
+    if (phoneHeld.SELECT && phoneHeld.START) {
+      clearTimeout(phoneButton.t);
+      phoneButton.t = setTimeout(() => { if (phoneHeld.SELECT && phoneHeld.START) backToLibrary(); }, 2000);
+    }
+    return;
+  }
+  if (!down) return;
+  const dir = { UP: "up", DOWN: "down", LEFT: "left", RIGHT: "right" }[name];
+  if (dir) moveFocus(dir);
+  if ((name === "A" || name === "START") && document.activeElement.classList.contains("card")) document.activeElement.click();
+}
+function savedPhoneId() {
+  try { return localStorage.getItem("sala-retro-peer") || null; } catch (e) { return null; }
+}
+async function startPhone() {
+  $("#phonePanel").hidden = false;
+  if (peer) return;
+  try {
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js");
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js");
+  } catch (e) {
+    $("#phoneMsg").textContent = "No se pudo cargar el modo celular. Revisa tu conexión a internet.";
+    return;
+  }
+  let id = savedPhoneId();
+  if (!id) {
+    id = "salaretro-" + Math.random().toString(36).slice(2, 8);
+    try { localStorage.setItem("sala-retro-peer", id); } catch (e) {}
+  }
+  peer = new Peer(id);
+  peer.on("open", () => {
+    const url = new URL("control.html", location.href);
+    url.hash = id;
+    $("#phoneUrl").textContent = url.href;
+    $("#qr").innerHTML = "";
+    new QRCode($("#qr"), { text: url.href, width: 360, height: 360, correctLevel: QRCode.CorrectLevel.M });
+    $("#phoneMsg").textContent = "Esperando al celular…";
+    try { sessionStorage.setItem("sala-retro-phone", "1"); } catch (e) {}
+  });
+  peer.on("connection", (conn) => {
+    conn.on("open", () => {
+      phoneChip.classList.add("on");
+      phoneChip.lastElementChild.textContent = "Celular conectado";
+      $("#phoneMsg").textContent = "Celular conectado. Ya puedes elegir un juego desde el celular.";
+      toast("Celular conectado");
+    });
+    conn.on("data", (m) => { if (m && m.b) phoneButton(m.b, m.d); });
+    conn.on("close", () => {
+      phoneChip.classList.remove("on");
+      phoneChip.lastElementChild.textContent = "Celular sin conectar";
+      $("#phoneMsg").textContent = "El celular se desconectó. Vuelve a abrir el enlace para reconectar.";
+    });
+  });
+  peer.on("error", (e) => {
+    if (e.type === "unavailable-id") {
+      try { localStorage.removeItem("sala-retro-peer"); } catch (er) {}
+      peer.destroy(); peer = null; startPhone();
+      return;
+    }
+    $("#phoneMsg").textContent = "Problema con la conexión del celular (" + e.type + "). Intenta otra vez.";
+  });
+}
+$("#phoneBtn").addEventListener("click", startPhone);
+// Si el celular estaba en uso, se reconecta solo al volver de un juego
+try { if (sessionStorage.getItem("sala-retro-phone")) startPhone(); } catch (e) {}
+
+updatePadChip();
+render().then(() => { const c = document.querySelector(".card"); if (c && !matchMedia("(hover: hover)").matches) c.focus(); });
+</script>
+</body>
+</html>
