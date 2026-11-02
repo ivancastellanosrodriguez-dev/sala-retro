@@ -118,6 +118,7 @@ h2 {
   min-width: 0;
 }
 .card:hover { border-color: var(--gold); }
+a.card { color: inherit; text-decoration: none; }
 .card:focus-visible { transform: scale(1.03); transition: transform 0.12s; }
 .card .sys {
   justify-self: start;
@@ -272,6 +273,27 @@ kbd {
   <div id="library">
     <h2>Tu biblioteca</h2>
     <div class="grid" id="grid"></div>
+  </div>
+
+  <div id="online">
+    <h2>Jugar en línea</h2>
+    <div class="grid">
+      <a class="card" href="https://classicgamezone.com/">
+        <span class="sys" style="background:#2f6f83">CLASSICGAMEZONE</span>
+        <span class="name">Todos los juegos de ClassicGameZone</span>
+        <span class="meta">Abre el sitio aquí mismo. Para regresar, usa Atrás en el navegador.</span>
+      </a>
+      <a class="card" href="https://classicgamezone.com/games/super-mario-bros">
+        <span class="sys">NES</span>
+        <span class="name">Super Mario Bros.</span>
+        <span class="meta">En ClassicGameZone</span>
+      </a>
+      <a class="card" href="https://classicgamezone.com/games/contra">
+        <span class="sys">NES</span>
+        <span class="name">Contra</span>
+        <span class="meta">En ClassicGameZone</span>
+      </a>
+    </div>
   </div>
 
   <div class="help">
