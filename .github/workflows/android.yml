@@ -1,0 +1,35 @@
+name: App para la tele
+
+on:
+  push:
+    branches: [main]
+    paths: ["android/**", ".github/workflows/android.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+      - name: Compilar APK
+        working-directory: android
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+        run: gradle assembleRelease --no-daemon
+      - name: Publicar en Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk sala-retro.apk
+          gh release delete tv --yes --cleanup-tag || true
+          gh release create tv sala-retro.apk --title "Sala Retro para la tele" --notes "App para Google TV / Android TV. Instálala con la app Downloader."
